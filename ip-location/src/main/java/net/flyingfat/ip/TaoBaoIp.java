@@ -1,42 +1,54 @@
 package net.flyingfat.ip;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+
 import com.google.gson.Gson;
 
 
 
 public class TaoBaoIp {
 
-	public static void main(String[] args) {
+	private static HttpClient client = new DefaultHttpClient();
+	
+	public static void execute(List<IpData> list) {
 
 		InputStream input = null;
 		ByteArrayOutputStream out = null;
-		HttpClient client = new DefaultHttpClient();
-		String ip="1.51.0.0";
-		HttpGet get = new HttpGet("http://ip.taobao.com/service/getIpInfo.php?ip="+ip);
 		try {
-			HttpResponse resp=client.execute(get);
-			HttpEntity content = resp.getEntity();
-			input = content.getContent();
-			out = new ByteArrayOutputStream();
-			byte by[] = new byte[1024];
-			int len = 0;
-			while ((len = input.read(by)) != -1) {
-				out.write(by, 0, len);
+			for(int i=0;i<list.size();i++){
+				IpData ipdata=list.get(i);
+				String ip=ipdata.getIpStartStr();
+				HttpGet get = new HttpGet("http://ip.taobao.com/service/getIpInfo.php?ip="+ip);
+				HttpResponse resp=client.execute(get);
+				HttpEntity content = resp.getEntity();
+				input = content.getContent();
+				out = new ByteArrayOutputStream();
+				byte by[] = new byte[1024];
+				int len = 0;
+				while ((len = input.read(by)) != -1) {
+					out.write(by, 0, len);
+				}
+				String json=convert(new String(out.toByteArray()));
+				Gson gson=new Gson();
+				TaoBaoResp res=gson.fromJson(json, TaoBaoResp.class);
+				System.out.println("\""+ipdata.getIpStartNum()+"\",\""+ipdata.getIpEndNum()+"\",\""
+						+ipdata.getIpStartStr()+"\",\""+ipdata.getIpEndStr()+"\",\""+res.getData().getRegion()+"\",\""+res.getData().getCity()+"\"");
 			}
-			String json=convert(new String(out.toByteArray()));
-			Gson gson=new Gson();
-			TaoBaoResp res=gson.fromJson(json, TaoBaoResp.class);
-			System.out.println(res.getData().getCity());
-			
 		} catch (Exception e) {
 			e.printStackTrace();
+		}finally{
+			IOUtils.closeQuietly(input);
+			IOUtils.closeQuietly(out);
+			client.getConnectionManager().shutdown();
 		}
 	}
 	

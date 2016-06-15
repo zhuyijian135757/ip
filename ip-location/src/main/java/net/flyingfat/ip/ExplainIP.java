@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-class IP {
+class ExplainIP {
 
 	
 	//len:4 
@@ -39,8 +39,8 @@ class IP {
     	
     	
     	//E:\\workplace\\baseServer\\IpTest\\src\\com\\Test\\17monipdb.dat
-    	URL url=IP.class.getResource("/17monipdb.dat");
-        IP.load(url.getFile());
+    	URL url=ExplainIP.class.getResource("/17monipdb.dat");
+        ExplainIP.load(url.getFile());
         
         //System.out.println(iplongToIp(67108865));  //50992127 50992127
         //1633328
@@ -144,10 +144,10 @@ class IP {
             dataBuffer.position(offset + (int) index_offset - 1024);
             byte[] areaBytes = new byte[index_length];
             dataBuffer.get(areaBytes, 0, index_length);
-            String area=Arrays.toString(new String(areaBytes, Charset.forName("UTF-8")).split("\t", -1));
+            String area=Arrays.toString(new String(areaBytes, Charset.forName("utf-8")).split("\t", -1));
             String areas[]=area.replace("[", "").replace("]","").split(", ");
 
-            if(areas.length>0 && areas[0].equals("印度") ){
+            if(areas.length>0 && areas[0].equals("中国") ){
             	if(areas.length==1){
             		System.out.println("\""+ipNumStartStr+"\",\""+ipNumEndStr+"\",\""+ipNumStart+"\",\""+ipNumEnd+"\",\"未知\",\"未知\"");
             	}else if(areas.length==2){

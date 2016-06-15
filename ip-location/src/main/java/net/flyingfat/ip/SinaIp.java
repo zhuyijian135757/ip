@@ -1,43 +1,53 @@
 package net.flyingfat.ip;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+
 import com.google.gson.Gson;
 
 
 
 public class SinaIp {
+	
+	private static HttpClient client = new DefaultHttpClient();
 
-	public static void main(String[] args) {
-
+	public static void execute(List<IpData> list) {
 		InputStream input = null;
 		ByteArrayOutputStream out = null;
-		HttpClient client = new DefaultHttpClient();
-		String ip="";
-		HttpGet get = new HttpGet("http://int.dpool.sina.com.cn/iplookup/iplookup.php?format=js&ip="+ip);
 		try {
-			HttpResponse resp=client.execute(get);
-			HttpEntity content = resp.getEntity();
-			input = content.getContent();
-			out = new ByteArrayOutputStream();
-			byte by[] = new byte[1024];
-			int len = 0;
-			while ((len = input.read(by)) != -1) {
-				out.write(by, 0, len);
+			for(int i=0;i<list.size();i++){
+				IpData ipdata=list.get(i);
+				String ip=ipdata.getIpStartStr();
+				HttpGet get = new HttpGet("http://int.dpool.sina.com.cn/iplookup/iplookup.php?format=js&ip="+ip);
+				HttpResponse resp=client.execute(get);
+				HttpEntity content = resp.getEntity();
+				input = content.getContent();
+				out = new ByteArrayOutputStream();
+				byte by[] = new byte[1024];
+				int len = 0;
+				while ((len = input.read(by)) != -1) {
+					out.write(by, 0, len);
+				}
+				String json=convert(new String(out.toByteArray()));
+				json=json.substring(json.indexOf("=")+2);
+				json=json.substring(0, json.length()-1);
+				Gson gson=new Gson();
+				SinaResp res=gson.fromJson(json, SinaResp.class);
+				System.out.println("\""+ipdata.getIpStartNum()+"\",\""+ipdata.getIpEndNum()+"\",\""
+						+ipdata.getIpStartStr()+"\",\""+ipdata.getIpEndStr()+"\",\""+res.getProvince()+"\",\""+res.getCity()+"\"");
 			}
-			String json=convert(new String(out.toByteArray()));
-			json=json.substring(json.indexOf("=")+2);
-			json=json.substring(0, json.length()-1);
-			Gson gson=new Gson();
-			SinaResp res=gson.fromJson(json, SinaResp.class);
-			System.out.println(res.getProvince()+":"+res.getCity());
-			
 		} catch (Exception e) {
 			e.printStackTrace();
+		}finally{
+			IOUtils.closeQuietly(input);
+			IOUtils.closeQuietly(out);
 		}
 	}
 	
